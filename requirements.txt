@@ -1,0 +1,12 @@
+matplotlib>=3.4.3
+scikit-image>=0.18.3
+scikit-learn>=1.0.1
+imgaug>=0.4.0
+yacs>=0.1.8
+segmentation-models-pytorch>=0.2.0
+
+git+git://github.com/sksq96/pytorch-summary.git#egg=torchsummary
+
+--find-links https://download.pytorch.org/whl/torch_stable.html
+torch==1.10.0+cu113
+torchvision==0.11.1+cu113
