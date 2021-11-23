@@ -61,12 +61,11 @@ def roc_outlier_graph(all_radial_errors, all_expected_radial_errors, save_path, 
 
 # At the moment this assumes all images have the same resolution
 def reliability_diagram(all_radial_errors, all_mode_probabilities, save_path,
-                        n_of_bins=10, pixel_size=0.30234375, do_not_save=False):
+                        n_of_bins=10, x_max=0.15, pixel_size=0.30234375, do_not_save=False):
 
-    largest_probability = np.percentile(all_mode_probabilities, 95)
-    bins = np.linspace(0, largest_probability, n_of_bins + 1)
+    bins = np.linspace(0, x_max, n_of_bins + 1)
     bins[-1] = 1.1
-    widths = largest_probability / n_of_bins
+    widths = x_max / n_of_bins
     radius = math.sqrt((pixel_size**2) / math.pi)
     correct_predictions = all_radial_errors < radius
 
@@ -102,8 +101,8 @@ def reliability_diagram(all_radial_errors, all_mode_probabilities, save_path,
     plt.xticks(fontsize=14)
     plt.yticks(fontsize=14)
     plt.grid(zorder=0)
-    plt.xlim(0.0, largest_probability)
-    plt.ylim(0.0, largest_probability * 2)
+    plt.xlim(0.0, x_max)
+    plt.ylim(0.0, x_max * 2)
     plt.bar(bins[:-1], avg_acc_for_each_bin, align='edge', width=widths, color='blue', edgecolor='black', label='Accuracy', zorder=3)
     plt.bar(bins[:-1], avg_conf_for_each_bin, align='edge', width=widths, color='lime', edgecolor='black', alpha=0.5,
             label='Gap', zorder=3)
