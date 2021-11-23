@@ -10,9 +10,28 @@ def get_hottest_point(heatmap):
     return np.flip(np.array(np.unravel_index(hottest_idx, [w, h])))
 
 
-def get_localisation_errors(heatmap_stack, landmarks_per_annotator, pixels_sizes):
+def get_mode_probability(heatmap):
+    return np.max(heatmap)
+
+
+def calculate_ere(heatmap, predicted_point_scaled, pixel_size, significant_pixel_cutoff=0.05):
+    normalized_heatmap = heatmap / np.max(heatmap)
+    normalized_heatmap = np.where(normalized_heatmap > significant_pixel_cutoff, normalized_heatmap, 0)
+    normalized_heatmap /= np.sum(normalized_heatmap)
+    indices = np.argwhere(normalized_heatmap)
+    ere = 0
+    for twod_idx in indices:
+        scaled_idx = np.flip(twod_idx) * pixel_size
+        dist = np.linalg.norm(predicted_point_scaled - scaled_idx)
+        ere += dist * normalized_heatmap[twod_idx[0], twod_idx[1]]
+    return ere
+
+
+def evaluate(heatmap_stack, landmarks_per_annotator, pixels_sizes):
     batch_size, no_of_key_points, w, h = heatmap_stack.shape
     radial_error_per_landmark = np.zeros((batch_size, no_of_key_points))
+    expected_error_per_landmark = np.zeros((batch_size, no_of_key_points))
+    mode_probability_per_landmark = np.zeros((batch_size, no_of_key_points))
 
     for i in range(batch_size):
 
@@ -31,7 +50,12 @@ def get_localisation_errors(heatmap_stack, landmarks_per_annotator, pixels_sizes
             localisation_error = np.linalg.norm(predicted_point_scaled - target_point_scaled)
             radial_error_per_landmark[i, j] = localisation_error
 
-    return radial_error_per_landmark
+            expected_error_per_landmark[i, j] = calculate_ere(heatmap_stack[i, j], predicted_point_scaled,
+                                                              pixel_size_for_sample)
+
+            mode_probability_per_landmark[i, j] = get_mode_probability(heatmap_stack[i, j])
+
+    return radial_error_per_landmark, expected_error_per_landmark, mode_probability_per_landmark
 
 
 # This function will visualise the output of the first image in the batch

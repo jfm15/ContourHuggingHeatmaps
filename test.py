@@ -1,12 +1,17 @@
+import os
 import argparse
 import torch
 
 import model
+import numpy as np
 
 from model import two_d_softmax
 from model import nll_across_batch
-from evaluate import get_localisation_errors
+from evaluate import evaluate
 from evaluate import visualise
+from plots import radial_error_vs_ere_graph
+from plots import roc_outlier_graph
+from plots import reliability_diagram
 from landmark_dataset import LandmarkDataset
 from utils import prepare_config_output_and_logger
 from torchsummary.torchsummary import summary_string
@@ -47,7 +52,7 @@ def main():
     # Get arguments and the experiment file
     args = parse_args()
 
-    cfg, logger, _ = prepare_config_output_and_logger(args.cfg)
+    cfg, logger, output_path, _ = prepare_config_output_and_logger(args.cfg)
 
     # Print the arguments into the log
     logger.info("-----------Arguments-----------")
@@ -75,6 +80,9 @@ def main():
     logger.info("-----------Start Testing-----------")
     model.eval()
     all_losses = []
+    all_radial_errors = []
+    all_expected_radial_errors = []
+    all_mode_probabilities = []
 
     with torch.no_grad():
         for idx, (image, channels, meta) in enumerate(test_loader):
@@ -87,18 +95,76 @@ def main():
             all_losses.append(loss.item())
 
             # Get the radial/localisation error and expected radial error values for each heatmap
-            radial_errors = get_localisation_errors(output.detach().numpy(),
-                                                    meta['landmarks_per_annotator'].detach().numpy(),
-                                                    meta['pixel_size'].detach().numpy())
-            print(radial_errors)
+            radial_errors, expected_radial_errors, mode_probabilities\
+                = evaluate(output.detach().numpy(),
+                           meta['landmarks_per_annotator'].detach().numpy(),
+                           meta['pixel_size'].detach().numpy())
+            all_radial_errors.append(radial_errors)
+            all_expected_radial_errors.append(expected_radial_errors)
+            all_mode_probabilities.append(mode_probabilities)
 
+            # Print loss, radial error for each landmark and MRE for the image
+            # Assumes that the batch size is 1 here
+            msg = "Image: {}\tloss: {:.3f}".format(meta['file_name'][0], loss.item())
+            for radial_error in radial_errors[0]:
+                msg += "\t{:.3f}mm".format(radial_error)
+            msg += "\taverage: {:.3f}mm".format(np.mean(radial_errors))
+            logger.info(msg)
+
+            '''
             visualise(image.cpu().detach().numpy(),
                       output.cpu().detach().numpy(),
                       meta['landmarks_per_annotator'].cpu().detach().numpy())
+            '''
 
-            # Print loss, radial error for each landmark and MRE for the image
-            msg = "Image: {}\tLoss: {:.3f}".format(meta['file_name'][0], loss.item())
-            logger.info(msg)
+    # Print out the statistics and graphs shown in the paper
+    logger.info("\n-----------Final Statistics-----------")
+
+    # Overall loss
+    logger.info("Average loss: {:.3f}".format(np.mean(all_losses)))
+
+    # MRE per landmark
+    all_radial_errors = np.array(all_radial_errors)
+    mre_per_landmark = np.mean(all_radial_errors, axis=(0, 1))
+    msg = "Average radial error per landmark: "
+    for mre in mre_per_landmark:
+        msg += "\t{:.3f}mm".format(mre)
+    logger.info(msg)
+
+    # Total MRE
+    mre = np.mean(all_radial_errors)
+    logger.info("Average radial error (MRE): {:.3f}mm".format(mre))
+
+    # Detection rates
+    flattened_radial_errors = all_radial_errors.flatten()
+    sdr_two = 100 * np.sum(flattened_radial_errors < 2.0) / len(flattened_radial_errors)
+    sdr_two_point_five = 100 * np.sum(flattened_radial_errors < 2.5) / len(flattened_radial_errors)
+    sdr_three = 100 * np.sum(flattened_radial_errors < 3.0) / len(flattened_radial_errors)
+    sdr_four = 100 * np.sum(flattened_radial_errors < 4.0) / len(flattened_radial_errors)
+    logger.info("2.0mm Successful Detection Rate (SDR): {:.3f}%".format(sdr_two))
+    logger.info("2.5mm Successful Detection Rate (SDR): {:.3f}%".format(sdr_two_point_five))
+    logger.info("3.0mm Successful Detection Rate (SDR): {:.3f}%".format(sdr_three))
+    logger.info("4.0mm Successful Detection Rate (SDR): {:.3f}%".format(sdr_four))
+
+    # Generate graphs
+    logger.info("\n-----------Save Graphs-----------")
+    flattened_expected_radial_errors = np.array(all_expected_radial_errors).flatten()
+    all_mode_probabilities = np.array(all_mode_probabilities).flatten()
+
+    # Save the correlation between radial error and ere graph
+    graph_save_path = os.path.join(output_path, "re_vs_ere_correlation_graph")
+    logger.info("Saving radial error vs expected radial error (ERE) graph to => {}".format(graph_save_path))
+    radial_error_vs_ere_graph(flattened_radial_errors, flattened_expected_radial_errors, graph_save_path)
+
+    # Save the roc outlier graph
+    graph_save_path = os.path.join(output_path, "roc_outlier_graph")
+    logger.info("Saving roc outlier graph to => {}".format(graph_save_path))
+    roc_outlier_graph(flattened_radial_errors, flattened_expected_radial_errors, graph_save_path)
+
+    # Save the roc outlier graph
+    graph_save_path = os.path.join(output_path, "reliability_diagram")
+    logger.info("Saving reliability diagram to => {}".format(graph_save_path))
+    reliability_diagram(flattened_radial_errors, all_mode_probabilities, graph_save_path)
 
 
 if __name__ == '__main__':

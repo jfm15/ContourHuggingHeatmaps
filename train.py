@@ -47,7 +47,7 @@ def main():
     # get arguments and the experiment file
     args = parse_args()
 
-    cfg, logger, save_model_path = prepare_config_output_and_logger(args.cfg)
+    cfg, logger, _, save_model_path = prepare_config_output_and_logger(args.cfg)
 
     # print the arguments into the log
     logger.info("-----------Arguments-----------")

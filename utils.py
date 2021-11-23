@@ -30,4 +30,4 @@ def prepare_config_output_and_logger(cfg_path):
     console = logging.StreamHandler()
     logging.getLogger('').addHandler(console)
 
-    return cfg, logger, save_model_path
+    return cfg, logger, output_path, save_model_path
