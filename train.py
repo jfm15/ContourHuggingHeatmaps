@@ -1,7 +1,4 @@
-import os
-import time
 import argparse
-import logging
 import torch
 
 import model
@@ -12,6 +9,7 @@ from model import two_d_softmax
 from model import nll_across_batch
 from config import get_cfg_defaults
 from landmark_dataset import LandmarkDataset
+from utils import prepare_config_output_and_logger
 from torchsummary.torchsummary import summary_string
 
 
@@ -49,28 +47,8 @@ def parse_args():
 def main():
     # get arguments and the experiment file
     args = parse_args()
-    cfg = get_cfg_defaults()
-    cfg.merge_from_file(args.cfg)
-    cfg.freeze()
 
-    # get directory to save log and model
-    split_cfg_path = args.cfg.split("/")
-    yaml_file_name = os.path.splitext(split_cfg_path[-1])[0]
-    output_path = os.path.join('output', yaml_file_name)
-    if not os.path.exists(output_path):
-        os.makedirs(output_path)
-    time_str = time.strftime('%Y-%m-%d-%H-%M')
-    log_file = 'train_{}.log'.format(time_str)
-    log_path = os.path.join(output_path, log_file)
-    best_model_path = os.path.join(output_path, yaml_file_name + "_model.pth")
-
-    # setup the logger
-    logging.basicConfig(filename=log_path,
-                        format='%(message)s')
-    logger = logging.getLogger()
-    logger.setLevel(logging.INFO)
-    console = logging.StreamHandler()
-    logging.getLogger('').addHandler(console)
+    cfg, logger, save_model_path = prepare_config_output_and_logger(args.cfg)
 
     # print the arguments into the log
     logger.info("-----------Arguments-----------")

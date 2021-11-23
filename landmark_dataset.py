@@ -181,6 +181,9 @@ class LandmarkDataset(Dataset):
             x, y = np.mean(landmarks_per_annotator[:, i], axis=0).astype(int)
             channels[i, y, x] = 1.0
 
+        # Add a channel to the images
+        image = np.expand_dims(image, axis=0)
+
         # Get meta
         meta_file = open(cached_meta_path, "r")
 
