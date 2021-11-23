@@ -140,7 +140,7 @@ def main():
             flattened_radial_errors = np.array(validation_radial_errors).flatten()
             flattened_mode_probabilities = np.array(validation_mode_probabilities).flatten()
 
-            ece = reliability_diagram(flattened_radial_errors, flattened_mode_probabilities, do_not_save=True)
+            ece = reliability_diagram(flattened_radial_errors, flattened_mode_probabilities, "", do_not_save=True)
             logger.info("Loss: {:.3f}\tECE: {:.3f}".format(np.mean(validation_losses), ece))
 
 
