@@ -39,6 +39,9 @@ def roc_outlier_graph(all_radial_errors, all_expected_radial_errors, save_path, 
     fpr, tpr, thresholds = roc_curve(outliers, all_expected_radial_errors)
     auc = roc_auc_score(outliers, all_expected_radial_errors)
 
+    first_idx = np.min(np.argwhere(tpr > 0.5))
+    proposed_threshold = thresholds[first_idx]
+
     # Plot graph
     plt.rcParams["figure.figsize"] = (6, 6)
     fig, ax = plt.subplots(1, 1)
@@ -57,6 +60,8 @@ def roc_outlier_graph(all_radial_errors, all_expected_radial_errors, save_path, 
              transform=ax.transAxes)
     plt.savefig(save_path)
     plt.close()
+
+    return proposed_threshold
 
 
 # At the moment this assumes all images have the same resolution
