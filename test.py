@@ -52,7 +52,7 @@ def main():
     # Get arguments and the experiment file
     args = parse_args()
 
-    cfg, logger, output_path, _ = prepare_config_output_and_logger(args.cfg)
+    cfg, logger, output_path, _, _ = prepare_config_output_and_logger(args.cfg, 'test')
 
     # Print the arguments into the log
     logger.info("-----------Arguments-----------")

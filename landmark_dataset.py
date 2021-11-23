@@ -15,7 +15,7 @@ import imgaug.augmenters as iaa
 
 
 class LandmarkDataset(Dataset):
-    def __init__(self, image_dir, annotation_dir, cfg_dataset, perform_augmentation=False):
+    def __init__(self, image_dir, annotation_dir, cfg_dataset, subset="all", perform_augmentation=False):
 
         self.cfg_dataset = cfg_dataset
         self.perform_augmentation = perform_augmentation
@@ -33,11 +33,11 @@ class LandmarkDataset(Dataset):
                                       sigma=data_aug_params.ELASTIC_SMOOTHNESS, order=3)
         ])
 
-        self.db = self.cache(image_dir, annotation_dir, cfg_dataset)
+        self.db = self.cache(image_dir, annotation_dir, cfg_dataset, subset)
 
 
     @staticmethod
-    def cache(images_dir, annotation_dir, cfg_dataset):
+    def cache(images_dir, annotation_dir, cfg_dataset, subset):
 
         db = []
 
@@ -62,6 +62,12 @@ class LandmarkDataset(Dataset):
 
         # get the file names of all images in the directory
         image_paths = sorted(glob.glob(images_dir + "/*" + cfg_dataset.IMAGE_EXT))
+
+        no_of_image_paths = len(image_paths)
+        if subset == "first half":
+            image_paths = image_paths[0:no_of_image_paths // 2]
+        elif subset == "second half":
+            image_paths = image_paths[no_of_image_paths // 2: no_of_image_paths]
 
         for image_path in tqdm(image_paths):
 
