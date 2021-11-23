@@ -60,8 +60,8 @@ def main():
     logger.info("")
 
     # load the train dataset and put it into a loader
-    train_dataset = LandmarkDataset(args.training_images, args.annotations, cfg.DATASET, perform_augmentation=True)
-    train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=cfg.TRAIN.BATCH_SIZE, shuffle=True)
+    training_dataset = LandmarkDataset(args.training_images, args.annotations, cfg.DATASET, perform_augmentation=True)
+    training_loader = torch.utils.data.DataLoader(training_dataset, batch_size=cfg.TRAIN.BATCH_SIZE, shuffle=True)
 
     '''
     for batch, (image, channels, meta) in enumerate(train_loader):
@@ -93,7 +93,7 @@ def main():
         model.train()
         losses_per_epoch = []
 
-        for batch, (image, channels, meta) in enumerate(train_loader):
+        for batch, (image, channels, meta) in enumerate(training_loader):
 
             # Put image and channels onto gpu
             image = image.cuda()
@@ -111,7 +111,7 @@ def main():
             losses_per_epoch.append(loss.item())
 
             if (batch + 1) % 5 == 0:
-                logger.info("[{}/{}]\tLoss: {:.3f}".format(batch + 1, len(train_loader), np.mean(losses_per_epoch)))
+                logger.info("[{}/{}]\tLoss: {:.3f}".format(batch + 1, len(training_loader), np.mean(losses_per_epoch)))
 
         scheduler.step()
 

@@ -104,6 +104,9 @@ def main():
 
             losses_per_epoch.append(loss.item())
 
+            if (batch + 1) % 5 == 0:
+                logger.info("[{}/{}]\tLoss: {:.3f}".format(batch + 1, len(training_loader), np.mean(losses_per_epoch)))
+
         msg = "Loss: {:.3f}".format(np.mean(losses_per_epoch))
         logger.info(msg)
 
@@ -128,9 +131,9 @@ def main():
 
                 # Get the radial/localisation error and expected radial error values for each heatmap
                 radial_errors, _, mode_probabilities \
-                    = evaluate(output.detach().numpy(),
-                               meta['landmarks_per_annotator'].detach().numpy(),
-                               meta['pixel_size'].detach().numpy())
+                    = evaluate(output.cpu().detach().numpy(),
+                               meta['landmarks_per_annotator'].cpu().detach().numpy(),
+                               meta['pixel_size'].cpu().detach().numpy())
                 validation_radial_errors.append(radial_errors)
                 validation_mode_probabilities.append(mode_probabilities)
 
