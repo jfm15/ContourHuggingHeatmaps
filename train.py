@@ -64,10 +64,9 @@ def main():
     train_dataset = LandmarkDataset(args.training_images, args.annotations, cfg.DATASET, perform_augmentation=True)
     train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=cfg.TRAIN.BATCH_SIZE, shuffle=True)
 
-    '''
     for batch, (image, channels, meta) in enumerate(train_loader):
         s = 0
-        plt.imshow(image[s].detach().numpy(), cmap='gray')
+        plt.imshow(image[s, 0].detach().numpy(), cmap='gray')
         squashed_channels = np.max(channels[s].detach().numpy(), axis=0)
         plt.imshow(squashed_channels, cmap='inferno', alpha=0.5)
 
@@ -76,7 +75,6 @@ def main():
         for i, position in enumerate(averaged_landmarks):
             plt.text(position[0], position[1], "{}".format(i + 1), color="yellow", fontsize="small")
         plt.show()
-    '''
 
     model = eval("model." + cfg.MODEL.NAME)(cfg.MODEL, cfg.DATASET.KEY_POINTS).cuda()
 
@@ -115,6 +113,10 @@ def main():
                 logger.info("[{}/{}]\tLoss: {:.3f}".format(batch + 1, len(train_loader), np.mean(losses_per_epoch)))
 
         scheduler.step()
+
+    logger.info("Saving Model's State Dict to {}".format(save_model_path))
+    torch.save(model.state_dict(), save_model_path)
+    logger.info("-----------Training Complete-----------")
 
 
 if __name__ == '__main__':
