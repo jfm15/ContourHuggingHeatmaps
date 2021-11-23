@@ -79,7 +79,7 @@ def main():
     logger.info(model_summary)
 
     model.temperatures.requires_grad = True
-    optimizer = torch.optim.Adam([model.temperatures], lr=cfg.TRAIN.LR)
+    optimizer = torch.optim.Adam([model.temperatures], lr=0.01)
 
     best_ece = math.inf
 
