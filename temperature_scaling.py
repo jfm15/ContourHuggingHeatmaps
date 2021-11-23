@@ -1,5 +1,6 @@
 import argparse
 import torch
+import math
 
 import model
 import numpy as np
@@ -80,6 +81,8 @@ def main():
     model.temperatures.requires_grad = True
     optimizer = torch.optim.Adam([model.temperatures], lr=cfg.TRAIN.LR)
 
+    best_ece = math.inf
+
     for epoch in range(cfg.TRAIN.EPOCHS):
 
         logger.info('-----------Epoch {} Temperature Scaling-----------'.format(epoch))
@@ -142,6 +145,13 @@ def main():
 
             ece = reliability_diagram(flattened_radial_errors, flattened_mode_probabilities, "", do_not_save=True)
             logger.info("Loss: {:.3f}\tECE: {:.3f}".format(np.mean(validation_losses), ece))
+
+            if ece < best_ece:
+                best_ece = ece
+                logger.info("Achieved best ECE score => Saving Model's State Dict to {}".format(save_model_path))
+                torch.save(model.state_dict(), save_model_path)
+
+    logger.info("-----------Temperature Scaling Complete-----------")
 
 
 if __name__ == '__main__':

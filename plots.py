@@ -108,8 +108,10 @@ def reliability_diagram(all_radial_errors, all_mode_probabilities, save_path,
             label='Gap', zorder=3)
     plt.legend(fontsize=20, loc="upper left", prop={'size': 16})
     plt.text(0.71, 0.075, 'ECE={:.2f}'.format(ece), backgroundcolor='white', fontsize='x-large', transform=ax.transAxes)
+
     if not do_not_save:
         plt.savefig(save_path)
+
     plt.close()
 
     return ece
