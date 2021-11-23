@@ -164,16 +164,13 @@ class LandmarkDataset(Dataset):
 
         if self.perform_augmentation:
 
-            # Augment image
-            image = self.augmentation(image=image)
+            # Augment image and annotations at the same to ensure the augmentation is the same
+            kps = KeypointsOnImage.from_xy_array(np.concatenate(landmarks_per_annotator), shape=image.shape)
+            image, kps_augmented = self.augmentation(image=image, keypoints=kps)
+            landmarks_per_annotator = kps_augmented.to_xy_array().reshape(-1, self.cfg_dataset.KEY_POINTS, 2)
 
-            # Augment annotations
-            augmented_landmarks_per_annotator = []
-            for landmark in landmarks_per_annotator:
-                kps = KeypointsOnImage.from_xy_array(landmark, shape=image.shape)
-                kps_augmented = self.augmentation(keypoints=kps)
-                augmented_landmarks_per_annotator.append(kps_augmented.to_xy_array())
-            landmarks_per_annotator = np.array(augmented_landmarks_per_annotator.copy())
+        # This line is here so we slice the array later in the code
+        landmarks_per_annotator = np.array(landmarks_per_annotator)
 
         # Generate ground truth maps
         channels = np.zeros([self.cfg_dataset.KEY_POINTS, image.shape[0], image.shape[1]])
@@ -189,6 +186,5 @@ class LandmarkDataset(Dataset):
 
         meta = json.load(meta_file)
         meta["landmarks_per_annotator"] = landmarks_per_annotator.copy()
-        meta["pixel_size"] = [self.cfg_dataset.PIXEL_SIZE[0] * meta["scale_factor"],
-                              self.cfg_dataset.PIXEL_SIZE[1] * meta["scale_factor"]]
+        meta["pixel_size"] = np.array(self.cfg_dataset.PIXEL_SIZE) * meta["scale_factor"]
         return image, channels, meta

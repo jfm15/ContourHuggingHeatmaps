@@ -7,7 +7,6 @@ import matplotlib.pyplot as plt
 
 from model import two_d_softmax
 from model import nll_across_batch
-from config import get_cfg_defaults
 from landmark_dataset import LandmarkDataset
 from utils import prepare_config_output_and_logger
 from torchsummary.torchsummary import summary_string
@@ -64,6 +63,7 @@ def main():
     train_dataset = LandmarkDataset(args.training_images, args.annotations, cfg.DATASET, perform_augmentation=True)
     train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=cfg.TRAIN.BATCH_SIZE, shuffle=True)
 
+    '''
     for batch, (image, channels, meta) in enumerate(train_loader):
         s = 0
         plt.imshow(image[s, 0].detach().numpy(), cmap='gray')
@@ -75,6 +75,7 @@ def main():
         for i, position in enumerate(averaged_landmarks):
             plt.text(position[0], position[1], "{}".format(i + 1), color="yellow", fontsize="small")
         plt.show()
+    '''
 
     model = eval("model." + cfg.MODEL.NAME)(cfg.MODEL, cfg.DATASET.KEY_POINTS).cuda()
 
