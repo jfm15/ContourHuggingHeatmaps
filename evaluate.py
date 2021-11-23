@@ -82,3 +82,9 @@ def visualise(images, heatmap_stack, landmarks_per_annotator):
     plt.show()
 
 
+def produce_sdr_statistics(radial_errors, thresholds):
+    successful_detection_rates = []
+    for threshold in thresholds:
+        sdr = 100 * np.sum(radial_errors < threshold) / len(radial_errors)
+        successful_detection_rates.append(sdr)
+    return successful_detection_rates

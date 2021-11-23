@@ -9,6 +9,7 @@ from model import two_d_softmax
 from model import nll_across_batch
 from evaluate import evaluate
 from evaluate import visualise
+from evaluate import produce_sdr_statistics
 from plots import radial_error_vs_ere_graph
 from plots import roc_outlier_graph
 from plots import reliability_diagram
@@ -41,6 +42,11 @@ def parse_args():
                         help='the path to a pretrained model',
                         type=str,
                         required=True)
+
+    parser.add_argument('--outlier_threshold',
+                        help='Classify landmarks with an ERE score over this value as outliers',
+                        type=float,
+                        default=1.5)
 
     args = parser.parse_args()
 
@@ -137,14 +143,9 @@ def main():
 
     # Detection rates
     flattened_radial_errors = all_radial_errors.flatten()
-    sdr_two = 100 * np.sum(flattened_radial_errors < 2.0) / len(flattened_radial_errors)
-    sdr_two_point_five = 100 * np.sum(flattened_radial_errors < 2.5) / len(flattened_radial_errors)
-    sdr_three = 100 * np.sum(flattened_radial_errors < 3.0) / len(flattened_radial_errors)
-    sdr_four = 100 * np.sum(flattened_radial_errors < 4.0) / len(flattened_radial_errors)
-    logger.info("2.0mm Successful Detection Rate (SDR): {:.3f}%".format(sdr_two))
-    logger.info("2.5mm Successful Detection Rate (SDR): {:.3f}%".format(sdr_two_point_five))
-    logger.info("3.0mm Successful Detection Rate (SDR): {:.3f}%".format(sdr_three))
-    logger.info("4.0mm Successful Detection Rate (SDR): {:.3f}%".format(sdr_four))
+    sdr_statistics = produce_sdr_statistics(flattened_radial_errors, [2.0, 2.5, 3.0, 4.0])
+    logger.info("Successful Detection Rate (SDR) for 2mm, 2.5mm, 3mm and 4mm respectively: "
+                "{:.3f}% {:.3f}% {:.3f}% {:.3f}%".format(*sdr_statistics))
 
     # Generate graphs
     logger.info("\n-----------Save Graphs-----------")
@@ -159,12 +160,36 @@ def main():
     # Save the roc outlier graph
     graph_save_path = os.path.join(output_path, "roc_outlier_graph")
     logger.info("Saving roc outlier graph to => {}".format(graph_save_path))
-    roc_outlier_graph(flattened_radial_errors, flattened_expected_radial_errors, graph_save_path)
+    proposed_threshold = roc_outlier_graph(flattened_radial_errors, flattened_expected_radial_errors, graph_save_path)
 
     # Save the roc outlier graph
     graph_save_path = os.path.join(output_path, "reliability_diagram")
     logger.info("Saving reliability diagram to => {}".format(graph_save_path))
     reliability_diagram(flattened_radial_errors, all_mode_probabilities, graph_save_path)
+
+    logger.info("\n-----------Outlier Prediction Experiment-----------")
+
+    # Outlier threshold proposal
+    logger.info("Classifying heatmaps with an ERE > {:.3f} produces "
+                "a true positive rate of 0.5 for detecting outliers".format(proposed_threshold))
+
+    logger.info("Using {:.3f} as a threshold for ERE we split the overall "
+                "set into a 'good' and 'erroneous' set with the following statistics:".format(args.outlier_threshold))
+    good_set_radial_errors = flattened_radial_errors[flattened_radial_errors <= args.outlier_threshold]
+    good_set_sdr_statistics = produce_sdr_statistics(good_set_radial_errors, [2.0, 2.5, 3.0, 4.0])
+    logger.info("A good set with {} landmarks for which the MRE is {:.3f}mm and the (SDR) "
+                "for 2mm, 2.5mm, 3mm and 4mm respectively is {:.3f}% {:.3f}% {:.3f}% {:.3f}%"
+                .format(len(good_set_radial_errors), np.mean(good_set_radial_errors), *good_set_sdr_statistics))
+
+    erroneous_set_radial_errors = flattened_radial_errors[flattened_radial_errors > args.outlier_threshold]
+    erroneous_set_sdr_statistics = produce_sdr_statistics(erroneous_set_radial_errors, [2.0, 2.5, 3.0, 4.0])
+    logger.info("An erroneous set with {} landmarks for which the MRE is {:.3f}mm and the (SDR) "
+                "for 2mm, 2.5mm, 3mm and 4mm respectively is {:.3f}% {:.3f}% {:.3f}% {:.3f}%"
+                .format(len(erroneous_set_radial_errors), np.mean(erroneous_set_radial_errors),
+                        *erroneous_set_sdr_statistics))
+
+
+
 
 
 if __name__ == '__main__':
