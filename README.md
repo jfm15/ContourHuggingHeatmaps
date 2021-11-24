@@ -1,3 +1,3 @@
 # Contour Hugging Heatmaps
 
-Code will be published on the 23rd November 2021
+Detailed instructions on how to use the code to be realised on the 25th Nov. 
