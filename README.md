@@ -118,12 +118,12 @@ ContourHuggingHeatmaps/output/cephalometric/. Please refer to our paper for a de
 
 #### The Expected Radial Error vs True Radial Error plot
 
-![correlation_graph](figures/re_vs_ere_correlation_graph.png)
+<img src="figures/re_vs_ere_correlation_graph.png" alt="drawing" width="400"/>
 
 #### Receiver operating characteristic curve
 
-![roc_graph](figures/roc_outlier_graph.png)
+<img src="figures/roc_outlier_graph.png" alt="drawing" width="400"/>
 
 #### Reliability diagram
 
-<img src="figures/reliability_diagram.png" alt="drawing" width="200"/>
+<img src="figures/reliability_diagram.png" alt="drawing" width="400"/>
