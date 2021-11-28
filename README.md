@@ -95,7 +95,7 @@ python train.py --cfg experiments/cephalometric.yaml --training_images {cephalom
  --annotations {cephalometric_data_directory}/AnnotationsByMD/
 ```
 
-1.2 Performing temperature scaling on the model saved in the previous step using the following command. 
+1.2 Perform temperature scaling on the model saved in the previous step using the following command. 
 The model with the best Estimated Calibration Error (ECE) score will be saved at ContourHuggingHeatmaps/output/cephalometric/cephalometric_scaled_model.pth.
 
 ```
