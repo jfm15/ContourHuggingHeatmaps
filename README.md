@@ -126,4 +126,4 @@ ContourHuggingHeatmaps/output/cephalometric/. Please refer to our paper for a de
 
 #### Reliability diagram
 
-![roc_graph](figures/reliability_diagram.png)
+<img src="figures/reliability_diagram.png" alt="drawing" width="200"/>
