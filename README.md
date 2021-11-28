@@ -1,12 +1,17 @@
 # Contour Hugging Heatmaps
 
+This code can be used to reproduce the experiments performed in our paper 'Contour Hugging Heatmaps for Landmark Detection'.
+
 ## Requirements
 
-## Quick start
+- Python 3 (code has been tested on Python 3.7)
+- CUDA and cuDNN (tested with Cuda 11.3)
+- Our experiments used a NVIDIA Quadro P4000 GPU which has 8GBs of memory. 
+- Python packages listed in the requirements.txt including PyTorch 1.10.0
 
-### Install
+## Getting Started
 
-1. Go to your chosen directory , clone this repo then enter it:
+1. Go to your chosen directory, clone this repo then enter it:
 ```
 git clone https://github.com/jfm15/ContourHuggingHeatmaps.git
 cd ContourHuggingHeatmaps/
@@ -62,7 +67,7 @@ pip install -r requirements.txt
         └── 400.bmp
 ````
 
-If you publish work using this dataset you must cite:
+Note that if you publish work using this dataset you must cite:
 ````
 @article{wang2016benchmark,
   title={A benchmark for comparison of dental radiography analysis algorithms},
@@ -100,12 +105,12 @@ python temperature_scaling.py --cfg experiments/cephalometric.yaml --fine_tuning
 
 #### 2. Download a model
 
-2.1 If you would like you can download our pretrained models at the following link: https://app.box.com/s/4qz3tthh7q6xajtaasj4fp9iaw86mmyx
+2.1 If you would like, instead of training a model you can download our pretrained models at the following link: https://app.box.com/s/4qz3tthh7q6xajtaasj4fp9iaw86mmyx
 
 #### 3. Testing
 
 3.1 Test the models using the following commands where {model_path} is the path to the model you have trained or downloaded. 
-You can either test the basic model trained or the temperature scaled model.
+You can either test the basic model or the temperature scaled model.
 
 ```
 python test.py --cfg experiments/cephalometric.yaml --testing_images {cephalometric_data_directory}/RawImage/{Test1Data or Test2Data}/
